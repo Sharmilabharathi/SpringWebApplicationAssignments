@@ -15,7 +15,7 @@
 </head>
 <body>
 <div id="errorUrl"  modelAttribute="url">
-    <h2> ${exception} </h2>
+    <h2> ${url} </h2>
 </div>
 
 <div id="exceptionDetails"  modelAttribute="exception">

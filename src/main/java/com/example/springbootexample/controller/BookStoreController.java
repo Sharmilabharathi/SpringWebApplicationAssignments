@@ -9,10 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Sharmila
@@ -69,15 +72,30 @@ public class BookStoreController {
         bookStoreService.deleteBookDetails(bookId);
     }
 
-    @PatchMapping("/patch/{bookId}/{bookName}")
-    public ResponseEntity<BookDetails> updateBookDetailsPartially(@PathVariable Integer bookId, @PathVariable String bookName) {
+   /* @PatchMapping("/patch/{bookId}")
+    public ResponseEntity<BookDetails> updateBookDetailsPartially(@PathVariable Integer bookId, @RequestBody String bookName) {
         try {
             BookDetails bookDetails = bookStoreService.getBookDetail(bookId);
             bookDetails.setBookName(bookName);
-            return new ResponseEntity<BookDetails>(bookStoreService.addBookDetails(bookDetails), HttpStatus.OK);
+            return new ResponseEntity<>(bookStoreService.addBookDetails(bookDetails), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }*/
+
+    @PatchMapping(value = "/patchBookDetails/{bookId}",consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> updateBookDetailsPartially(@PathVariable Integer bookId, @RequestBody Map<Object,Object> fields) {
+      BookDetails bookDetails = bookStoreService.getBookDetail(bookId);
+
+        fields.forEach((k, v) -> {
+            // use reflection to get field k on manager and set it to value v
+            Field field = ReflectionUtils.findField(BookDetails.class, k.toString());
+            field.setAccessible(true);
+            ReflectionUtils.setField(field, bookDetails, v);
+        });
+
+       bookStoreService.addBookDetails(bookDetails);
+        return  ResponseEntity.ok("Successfully patched Book details");
     }
 
 
